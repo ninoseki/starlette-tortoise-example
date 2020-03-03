@@ -9,7 +9,6 @@ v = {editable = true,version = "*"}
 pytest-asyncio = "*"
 pycodestyle = "*"
 autopep8 = "*"
-asynctest = "*"
 
 [packages]
 starlette = "*"
@@ -18,6 +17,11 @@ aiosqlite = "*"
 asyncio = "*"
 uvicorn = "*"
 requests = "*"
+httpx = "*"
+black = "*"
 
 [requires]
 python_version = "3.8"
+
+[pipenv]
+allow_prereleases = true

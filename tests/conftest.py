@@ -1,27 +1,37 @@
 from starlette.config import environ
-from starlette.testclient import TestClient
-from tortoise import Tortoise, run_async
-from tortoise.contrib.test import finalizer, initializer
-import os
+from tortoise import Tortoise
+from tortoise.exceptions import DBConnectionError
+import asyncio
+import httpx
 import pytest
 
-from app import settings
 from app import create_app
-from app.models import Users
+from app import settings
 
-@pytest.fixture(scope="session", autouse=True)
-def initialize_tests(request):
-    db_url = environ.get("TORTOISE_TEST_DB", "sqlite://:memory:")
-    initializer(settings.APP_MODELS, db_url=db_url)
-    request.addfinalizer(finalizer)
+
+@pytest.fixture(scope="module")
+def event_loop():
+    return asyncio.get_event_loop()
 
 
 @pytest.fixture
-def client():
+async def client():
     app = create_app()
-    return TestClient(app)
+    return httpx.AsyncClient(app=app, base_url="http://testserver")
 
 
 @pytest.fixture
-async def users(request):
-    pass
+async def tortoise_db():
+    db_url = environ.get("TORTOISE_TEST_DB", "sqlite://:memory:")
+    try:
+        await Tortoise.init(db_url=db_url, modules={"models": settings.APP_MODELS})
+        await Tortoise._drop_databases()
+    except DBConnectionError:
+        pass
+
+    await Tortoise.init(db_url=db_url, modules={"models": settings.APP_MODELS})
+    await Tortoise.generate_schemas()
+
+    yield
+
+    await Tortoise.close_connections()

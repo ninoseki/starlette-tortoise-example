@@ -18,16 +18,14 @@ async def list_all(_: Request) -> JSONResponse:
     users = await Users.all()
     return JSONResponse({"users": [str(user) for user in users]})
 
+
 routes = [
-    Route('/', list_all),
+    Route("/", list_all),
 ]
 
 
 def create_app():
-    return Starlette(
-        debug=settings.DEBUG,
-        routes=routes
-    )
+    return Starlette(debug=settings.DEBUG, routes=routes)
 
 
 app = create_app()
